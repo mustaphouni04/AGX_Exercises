@@ -47,6 +47,7 @@ def crawler(sp: spotipy.client.Spotify, seed: str, max_nodes_to_crawl: int, stra
     graph.add_node(seed)
     visited.add(seed)
 
+	# # Continue crawling until the queue/stack is empty or we reach max nodes
     while queue and len(graph.nodes) < max_nodes_to_crawl:
         if strategy == "BFS":
             current_artist = queue.popleft()
@@ -54,23 +55,24 @@ def crawler(sp: spotipy.client.Spotify, seed: str, max_nodes_to_crawl: int, stra
             current_artist = queue.pop()
         
         try:
+            # fetch related artists
             related_artists = sp.artist_related_artists(current_artist)['artists']
         except spotipy.exceptions.SpotifyException as e:
+            # in case of network error or similar
             print(f"Error retrieving related artists for {current_artist}: {e}")
             continue
 
         for artist in related_artists:
             artist_id = artist['id']
             if artist_id not in visited:
+                # Add new artist to the graph and mark as visited
                 graph.add_node(artist_id)
                 graph.add_edge(current_artist, artist_id)
                 visited.add(artist_id)
                 if len(graph.nodes) >= max_nodes_to_crawl:
                     break
-                if strategy == "BFS":
-                    queue.append(artist_id)
-                else:  # DFS
-                    queue.append(artist_id)
+                # Add artist to the queue/stack to further explore
+                queue.append(artist_id)
     
     nx.write_graphml(graph, out_filename)
     return graph
@@ -87,7 +89,6 @@ def get_track_data(sp: spotipy.client.Spotify, graphs: list, out_filename: str) 
     :return: pandas dataframe with track data.
     """
     # ------- IMPLEMENT HERE THE BODY OF THE FUNCTION ------- #
-    # Initialize an empty list to store track data
     track_data = []
 
     # Extract unique artist IDs from the list of graphs
@@ -115,10 +116,7 @@ def get_track_data(sp: spotipy.client.Spotify, graphs: list, out_filename: str) 
             }
             track_data.append(track_info)
 
-    # Create a DataFrame from the track data
     df = pd.DataFrame(track_data)
-
-    # Save the DataFrame to a CSV file
     df.to_csv(out_filename, index=False)
 
     return df
