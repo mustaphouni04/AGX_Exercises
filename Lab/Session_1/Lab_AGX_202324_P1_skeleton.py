@@ -10,18 +10,18 @@ from collections import deque
 
 
 def search_artist(sp: spotipy.client.Spotify, artist_name: str) -> str:
-	"""
-	Search for an artist in Spotify.
+    """
+    Search for an artist in Spotify.
 
-	:param sp: spotipy client object
-	:param artist_name: name to search for.
-	:return: spotify artist id.
-	"""
-	# ------- IMPLEMENT HERE THE BODY OF THE FUNCTION ------- #
+    :param sp: spotipy client object
+    :param artist_name: name to search for.
+    :return: spotify artist id.
+    """
+    # ------- IMPLEMENT HERE THE BODY OF THE FUNCTION ------- #
 
-	artist = sp.search(artist_name)
-	return artist['tracks']['items'][0]['album']['artists'][0]['id']
-	# ----------------- END OF FUNCTION --------------------- #
+    artist = sp.search(artist_name)
+    return artist['tracks']['items'][0]['album']['artists'][0]['id']
+    # ----------------- END OF FUNCTION --------------------- #
 
 
 def crawler(sp: spotipy.client.Spotify, seed: str, max_nodes_to_crawl: int, strategy: str = "BFS",
@@ -47,7 +47,7 @@ def crawler(sp: spotipy.client.Spotify, seed: str, max_nodes_to_crawl: int, stra
     graph.add_node(seed)
     visited.add(seed)
 
-	# # Continue crawling until the queue/stack is empty or we reach max nodes
+    # # Continue crawling until the queue/stack is empty or we reach max nodes
     while queue and len(graph.nodes) < max_nodes_to_crawl:
         if strategy == "BFS":
             current_artist = queue.popleft()
@@ -69,10 +69,9 @@ def crawler(sp: spotipy.client.Spotify, seed: str, max_nodes_to_crawl: int, stra
                 graph.add_node(artist_id)
                 graph.add_edge(current_artist, artist_id)
                 visited.add(artist_id)
-                if len(graph.nodes) >= max_nodes_to_crawl:
-                    break
                 # Add artist to the queue/stack to further explore
-                queue.append(artist_id)
+                if len(graph.nodes) < max_nodes_to_crawl:
+                    queue.append(artist_id)
     
     nx.write_graphml(graph, out_filename)
     return graph
