@@ -64,10 +64,10 @@ def crawler(sp: spotipy.client.Spotify, seed: str, max_nodes_to_crawl: int, stra
 
         for artist in related_artists:
             artist_id = artist['id']
+            graph.add_edge(current_artist, artist_id)
             if artist_id not in visited:
                 # Add new artist to the graph and mark as visited
                 graph.add_node(artist_id)
-                graph.add_edge(current_artist, artist_id)
                 visited.add(artist_id)
                 # Add artist to the queue/stack to further explore
                 if len(graph.nodes) < max_nodes_to_crawl:
