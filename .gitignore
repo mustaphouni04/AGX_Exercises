@@ -3,3 +3,8 @@
 *.csv
 *.ml
 *.geojson
+*.cache
+*.graphml
+*credentials.json
+*.pdf
+*temp.ipynb
