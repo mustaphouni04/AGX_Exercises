@@ -2,9 +2,32 @@ import networkx as nx
 from collections import defaultdict
 from networkx.algorithms.community import girvan_newman
 from community import community_louvain # pip install python-louvain
+from pprint import pprint
+import pandas as pd
 
 # ------- IMPLEMENT HERE ANY AUXILIARY FUNCTIONS NEEDED ------- #
+def find_mfvs(graph: nx.DiGraph):
+	"""
+	Find an approximate minimum feedback vertex set for a directed graph.
 
+	:param graph: networkx DiGraph
+	:return: set of nodes forming an approximate MFVS
+	"""
+	g = graph.copy()
+	mfvs = set()
+	
+	# Continue removing nodes until there are no cycles
+	while True:
+		try:
+			cycle = nx.find_cycle(g, orientation='original')
+			# Find the node with the highest degree in the cycle
+			node_to_remove = max(cycle, key=lambda x: g.degree(x[0]))[0]
+			mfvs.add(node_to_remove)
+			g.remove_node(node_to_remove)
+		except nx.NetworkXNoCycle:
+			break
+	
+	return mfvs
 
 # --------------- END OF AUXILIARY FUNCTIONS ------------------ #
 
@@ -102,12 +125,13 @@ def find_cliques(g: nx.Graph, min_size_clique: int) -> tuple:
 	# ----------------- END OF FUNCTION --------------------- #
 
 
-def detect_communities(g: nx.Graph, method: str) -> tuple:
+def detect_communities(g: nx.Graph, method: str, random_seed: int=42) -> tuple:
 	"""
 	Detect communities in the graph g using the specified method.
 
 	:param g: a networkx graph.
 	:param method: string with the name of the method to use. Can be (at least) 'givarn-newman' or 'louvain'.
+	:param random_seed: random seed for louvain method.
 	:return: two-element tuple, list of communities (each community is a list of nodes) and modularity of the partition.
 	"""
 	# ------- IMPLEMENT HERE THE BODY OF THE FUNCTION ------- #
@@ -133,7 +157,7 @@ def detect_communities(g: nx.Graph, method: str) -> tuple:
 
 
 	elif method == 'louvain':
-		partition = community_louvain.best_partition(g)
+		partition = community_louvain.best_partition(g, random_state=random_seed)
 		
 		# Create communities from partition
 		communities = {}
@@ -155,5 +179,67 @@ def detect_communities(g: nx.Graph, method: str) -> tuple:
 
 if __name__ == '__main__':
 	# ------- IMPLEMENT HERE THE MAIN FOR THIS SESSION ------- #
-	pass
+	gB = nx.read_graphml('gB.graphml')
+	gD = nx.read_graphml('gD.graphml')
+	gB2 = nx.read_graphml('gB_undirected.graphml')
+	gD2 = nx.read_graphml('gD_undirected.graphml')
+	df = pd.read_csv('songs.csv')
+	# 1)
+	# 	a)
+	shared_nodes_BD = num_common_nodes(gB, gD)
+	print("Number of common nodes between gB and gD:", shared_nodes_BD,\
+	   "(out of", gB.number_of_nodes(), "and", str(gD.number_of_nodes())+")")
+	# 	b)
+	shared_nodes_BB2 = num_common_nodes(gB, gB2)
+	print("Number of common nodes between gB and gB2:", shared_nodes_BB2,\
+	   "(out of", gB.number_of_nodes(), "and", str(gB2.number_of_nodes())+")")
+	# 2)
+	central_25_deg = get_k_most_central(gB2, 'degree', 25)
+	central_25_bet = get_k_most_central(gB2, 'betweenness', 25)
+	common_central = set(central_25_deg).intersection(central_25_bet)
+	# print("25 most central nodes by degree:", central_25_deg)
+	# print("25 most central nodes by betweenness:", central_25_bet)
+	print(f"Common nodes in both sets: {len(common_central)}")
+	# 3)
+	min_size_clique_B = 3
+	min_size_clique_D = 2
+	cliques_B, nodes_in_cliques_B = find_cliques(gB2, min_size_clique_B)
+	cliques_D, nodes_in_cliques_D = find_cliques(gD2, min_size_clique_D)
+	print(f"Number of cliques in gB2 with at least {min_size_clique_B} nodes:", len(cliques_B))
+	print(f"Number of cliques in gD2 with at least {min_size_clique_D} nodes:", len(cliques_D))
+	print(f"Number of nodes part of the cliques in gB2:", len(nodes_in_cliques_B))
+	print(f"Number of nodes part of the cliques in gD2:", len(nodes_in_cliques_D))
+	# 4)
+	max_size_clique_B = max(cliques_B, key=len)
+	# get their graph nodes and print characteristics
+	max_size_clique_B = [gB.nodes[i] for i in max_size_clique_B]
+	print("Nodes in the largest clique in gB2:")
+	pprint(max_size_clique_B)
+	# 5)
+	communities, modularity = detect_communities(gD, 'girvan-newman')
+	print(f"Modularity of the partition found by Girvan-Newman in gD: {modularity}")
+	# 6)
+	# 	a)
+	mfvs_B = find_mfvs(gB)
+	mfvs_D = find_mfvs(gD)
+	print(f"The minimum cost for graph gB is {len(mfvs_B)} x 100 = {len(mfvs_B)*100}")
+	print(f"The minimum cost for graph gD is {len(mfvs_D)} x 100 = {len(mfvs_D)*100}")
+	# 	b)
+	betweenness_centrality = nx.betweenness_centrality(gB)
+	sorted_nodes = sorted(betweenness_centrality.items(), key=lambda x: x[1], reverse=True)
+	top_nodes = [node for node, _ in sorted_nodes[:4]]
+	print("Top 4 nodes with highest betweenness centrality in gB:")
+	pprint([gB.nodes[node]["name"] for node in top_nodes])
+	betweenness_centrality = nx.betweenness_centrality(gD)
+	sorted_nodes = sorted(betweenness_centrality.items(), key=lambda x: x[1], reverse=True)
+	top_nodes = [node for node, _ in sorted_nodes[:4]]
+	print("Top 4 nodes with highest betweenness centrality in gD:")
+	pprint([gD.nodes[node]["name"] for node in top_nodes])
+	# 7)
+	taylor_swift = df[df['artist_name'] == 'Meghan Trainor']["artist_id"].values[0]
+	ariana_grande = df[df['artist_name'] == 'Kali Uchis']["artist_id"].values[0]
+	path = nx.shortest_path(gB, source=taylor_swift, target=ariana_grande)
+	print("Shortest path between Meghan Trainor and Kali Uchis in gB:")
+	pprint([gB.nodes[node]["name"] for node in path])
+
 	# ------------------- END OF MAIN ------------------------ #
