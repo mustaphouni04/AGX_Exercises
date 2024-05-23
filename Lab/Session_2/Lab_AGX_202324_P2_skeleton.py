@@ -150,49 +150,19 @@ def create_similarity_graph(artist_audio_features_df: pd.DataFrame, similarity: 
 
 
 if __name__ == "__main__":
-    # Create a directed graph
-    g = nx.DiGraph()
-    g.add_edge('A', 'B')
-    g.add_edge('B', 'A')
-    g.add_edge('A', 'C')
-    g.add_edge('C', 'D')
-    g.add_edge('D', 'C')
-    
-    # Call the function
-    undirected_graph = retrieve_bidirectional_edges(g, 'bidirectional_graph.graphml')
-    
-    print("Nodes in the undirected graph:", undirected_graph.nodes())
-    print("Edges in the undirected graph:", undirected_graph.edges())
+    gB = nx.read_graphml('../Session_1/gB.graphml')
+    gD = nx.read_graphml('../Session_1/gD.graphml')
 
-    g = nx.gnm_random_graph(100, 1000)
-    pruned_graph = prune_low_degree_nodes(g, 25, 'pruned_graph.graphml')
-
-    print("Nodes in the pruned graph:", pruned_graph.nodes())
-    print("Edges in the pruned graph:", pruned_graph.edges())
-
-    # create a random graph with 10 nodes and 15 edges
-    g = nx.gnm_random_graph(10, 15)
-    
-    # add random weights to the edges
-    for u, v in g.edges():
-        g[u][v]['weight'] = random.uniform(0, 1)
-    
-    # print the original graph details
-    print("Original graph:")
-    print("Nodes:", g.number_of_nodes())
-    print("Edges:", g.number_of_edges())
-    
-    # Prune the graph by removing edges with weight < 0.5
-    pruned_graph = prune_low_weight_edges(g, min_weight=0.5, out_filename="pruned_graph.graphml")
-    
-    # Print the pruned graph details
-    print("\nPruned graph:")
-    print("Nodes:", pruned_graph.number_of_nodes())
-    print("Edges:", pruned_graph.number_of_edges())
+    undirected_gB = retrieve_bidirectional_edges(gB, "gBp.graphml")
+    undirected_gD = retrieve_bidirectional_edges(gD, "gDp.graphml")
+    print(undirected_gD)
+    print(undirected_gB)
 
     df = pd.read_csv("../Session_1/songs.csv")
     df = compute_mean_audio_features(df)
-    print(df.head())
 
-    G = create_similarity_graph(df, "cosine", "similarity_graph.graphml")
-    print(G)
+    graph = create_similarity_graph(df, "cosine", "graph_similarity.graphml")
+    undirected_graph = retrieve_bidirectional_edges(graph, "gw.graphml")
+    print(undirected_graph)
+    
+    
