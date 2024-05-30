@@ -2,6 +2,8 @@ import networkx as nx
 import pandas as pd
 import os
 import random
+import numpy as np
+from sklearn.metrics.pairwise import cosine_similarity, euclidean_distances
 
 # ------- IMPLEMENT HERE ANY AUXILIARY FUNCTIONS NEEDED ------- #
 
@@ -29,27 +31,7 @@ def retrieve_bidirectional_edges(g: nx.DiGraph, out_filename: str) -> nx.Graph:
     # save the undirected graph in graphml format
     nx.write_graphml(undirected_graph, out_filename)
 
-    print("Current working directory:", os.getcwd())
-    if os.path.exists('bidirectional_graph.graphml'):
-        print("File written successfully!")
-    else:
-        print("Failed to write file.")
-
     return undirected_graph
-
-# Create a directed graph
-g = nx.DiGraph()
-g.add_edge('A', 'B')
-g.add_edge('B', 'A')
-g.add_edge('A', 'C')
-g.add_edge('C', 'D')
-g.add_edge('D', 'C')
-
-# Call the function
-undirected_graph = retrieve_bidirectional_edges(g, 'bidirectional_graph.graphml')
-
-print("Nodes in the undirected graph:", undirected_graph.nodes())
-print("Edges in the undirected graph:", undirected_graph.edges())
 
 def prune_low_degree_nodes(g: nx.Graph, min_degree: int, out_filename: str) -> nx.Graph:
     """
@@ -74,13 +56,6 @@ def prune_low_degree_nodes(g: nx.Graph, min_degree: int, out_filename: str) -> n
     nx.write_graphml(pruned_graph, out_filename)
 
     return pruned_graph
-
-g = nx.gnm_random_graph(100, 1000)
-pruned_graph = prune_low_degree_nodes(g, 25, 'pruned_graph.graphml')
-
-print("Nodes in the pruned graph:", pruned_graph.nodes())
-print("Edges in the pruned graph:", pruned_graph.edges())
-
 
 def prune_low_weight_edges(g: nx.Graph, min_weight=None, min_percentile=None, out_filename: str = None) -> nx.Graph:
     """
@@ -113,26 +88,6 @@ def prune_low_weight_edges(g: nx.Graph, min_weight=None, min_percentile=None, ou
 
     return pruned_graph
 
-# create a random graph with 10 nodes and 15 edges
-g = nx.gnm_random_graph(10, 15)
-
-# add random weights to the edges
-for u, v in g.edges():
-    g[u][v]['weight'] = random.uniform(0, 1)
-
-# print the original graph details
-print("Original graph:")
-print("Nodes:", g.number_of_nodes())
-print("Edges:", g.number_of_edges())
-
-# Prune the graph by removing edges with weight < 0.5
-pruned_graph = prune_low_weight_edges(g, min_weight=0.5, out_filename="pruned_graph.graphml")
-
-# Print the pruned graph details
-print("\nPruned graph:")
-print("Nodes:", pruned_graph.number_of_nodes())
-print("Edges:", pruned_graph.number_of_edges())
-
 def compute_mean_audio_features(tracks_df: pd.DataFrame) -> pd.DataFrame:
     """
     Compute the mean audio features for tracks of the same artist.
@@ -140,13 +95,25 @@ def compute_mean_audio_features(tracks_df: pd.DataFrame) -> pd.DataFrame:
     :param tracks_df: tracks dataframe (with audio features per each track).
     :return: artist dataframe (with mean audio features per each artist).
     """
-    # ------- IMPLEMENT HERE THE BODY OF THE FUNCTION ------- #
-    pass
-    # ----------------- END OF FUNCTION --------------------- #
+    # group the tracks by artist and compute the mean audio features
+    artist_df = tracks_df.groupby('artist_id').agg({
+        'danceability': 'mean',
+        'energy': 'mean',
+        'loudness': 'mean',
+        'speechiness': 'mean',
+        'acousticness': 'mean',
+        'instrumentalness': 'mean',
+        'liveness': 'mean',
+        'valence': 'mean',
+        'tempo': 'mean'
+    }).reset_index()
 
+    # add the artist name to the resulting dataframe
+    artist_df['artist_name'] = artist_df['artist_id'].map(tracks_df.set_index('artist_id')['artist_name'].to_dict())
 
-def create_similarity_graph(artist_audio_features_df: pd.DataFrame, similarity: str, out_filename: str = None) -> \
-        nx.Graph:
+    return artist_df
+
+def create_similarity_graph(artist_audio_features_df: pd.DataFrame, similarity: str, out_filename: str = None) -> nx.Graph:
     """
     Create a similarity graph from a dataframe with mean audio features per artist.
 
@@ -155,12 +122,47 @@ def create_similarity_graph(artist_audio_features_df: pd.DataFrame, similarity: 
     :param out_filename: name of the file that will be saved.
     :return: a networkx graph with the similarity between artists as edge weights.
     """
-    # ------- IMPLEMENT HERE THE BODY OF THE FUNCTION ------- #
-    pass
-    # ----------------- END OF FUNCTION --------------------- #
+    # create a new graph
+    G = nx.Graph()
+
+    # add nodes for each artist
+    for index, row in artist_audio_features_df.iterrows():
+        G.add_node(row['artist_id'], name=row['artist_name'])
+
+    # compute the similarity matrix
+    if similarity == "cosine":
+        similarity_matrix = cosine_similarity(artist_audio_features_df.drop(['artist_id', 'artist_name'], axis=1))
+    elif similarity == "euclidean":
+        similarity_matrix = 1 / (1 + euclidean_distances(artist_audio_features_df.drop(['artist_id', 'artist_name'], axis=1)))
+    else:
+        raise ValueError("Invalid similarity metric")
+
+    # add edges with similarity as weight
+    for i in range(len(artist_audio_features_df)):
+        for j in range(i+1, len(artist_audio_features_df)):
+            G.add_edge(artist_audio_features_df.iloc[i]['artist_id'], artist_audio_features_df.iloc[j]['artist_id'], weight=similarity_matrix[i, j])
+
+    # save the graph to a file
+    if out_filename is not None:
+        nx.write_graphml(G, out_filename)
+
+    return G
 
 
 if __name__ == "__main__":
-    # ------- IMPLEMENT HERE THE MAIN FOR THIS SESSION ------- #
-    pass
-    # ------------------- END OF MAIN ------------------------ #
+    gB = nx.read_graphml('../Session_1/gB.graphml')
+    gD = nx.read_graphml('../Session_1/gD.graphml')
+
+    undirected_gB = retrieve_bidirectional_edges(gB, "gBp.graphml")
+    undirected_gD = retrieve_bidirectional_edges(gD, "gDp.graphml")
+    print(undirected_gD)
+    print(undirected_gB)
+
+    df = pd.read_csv("../Session_1/songs.csv")
+    df = compute_mean_audio_features(df)
+
+    graph = create_similarity_graph(df, "cosine", "graph_similarity.graphml")
+    undirected_graph = retrieve_bidirectional_edges(graph, "gw.graphml")
+    print(undirected_graph)
+    
+    
