@@ -56,7 +56,7 @@ def crawler(sp: spotipy.client.Spotify, seed: str, max_nodes_to_crawl: int, stra
 	visited.add(seed)
 
 	# # Continue crawling until the queue/stack is empty or we reach max nodes
-	while queue and len(graph.nodes) < max_nodes_to_crawl:
+	while queue:
 		if strategy == "BFS":
 			current_artist = queue.popleft()
 		else:  # DFS
