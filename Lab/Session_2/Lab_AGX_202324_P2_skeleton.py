@@ -25,13 +25,17 @@ def retrieve_bidirectional_edges(g: nx.DiGraph, out_filename: str) -> nx.Graph:
     for u, v in g.edges():
         # check if the reverse edge also exists in the directed graph
         if g.has_edge(v, u):
-            # add the edge to the undirected graph
-            undirected_graph.add_edge(u, v)
+            # get the weight of the edge in the directed graph
+            weight = g[u][v].get('weight', 1)  # default weight is 1 if not found
+
+            # add the edge to the undirected graph with its weight
+            undirected_graph.add_edge(u, v, weight=weight)
 
     # save the undirected graph in graphml format
     nx.write_graphml(undirected_graph, out_filename)
 
     return undirected_graph
+
 
 def prune_low_degree_nodes(g: nx.Graph, min_degree: int, out_filename: str) -> nx.Graph:
     """
