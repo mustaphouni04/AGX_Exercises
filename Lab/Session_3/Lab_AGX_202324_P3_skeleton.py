@@ -209,37 +209,37 @@ if __name__ == '__main__':
 	print(f"Number of cliques in gD2 with at least {min_size_clique_D} nodes:", len(cliques_D))
 	print(f"Number of nodes part of the cliques in gB2:", len(nodes_in_cliques_B))
 	print(f"Number of nodes part of the cliques in gD2:", len(nodes_in_cliques_D))
-	# # 4)
-	# max_size_clique_B = max(cliques_B, key=len)
-	# # get their graph nodes and print characteristics
-	# max_size_clique_B = [gB.nodes[i] for i in max_size_clique_B]
-	# print("Nodes in the largest clique in gB2:")
-	# pprint(max_size_clique_B)
-	# # 5)
-	# communities, modularity = detect_communities(gD, 'girvan-newman')
-	# print(f"Modularity of the partition found by Girvan-Newman in gD: {modularity}")
-	# # 6)
-	# # 	a)
-	# mfvs_B = find_mfvs(gB)
-	# mfvs_D = find_mfvs(gD)
-	# print(f"The minimum cost for graph gB is {len(mfvs_B)} x 100 = {len(mfvs_B)*100}")
-	# print(f"The minimum cost for graph gD is {len(mfvs_D)} x 100 = {len(mfvs_D)*100}")
-	# # 	b)
-	# betweenness_centrality = nx.betweenness_centrality(gB)
-	# sorted_nodes = sorted(betweenness_centrality.items(), key=lambda x: x[1], reverse=True)
-	# top_nodes = [node for node, _ in sorted_nodes[:4]]
-	# print("Top 4 nodes with highest betweenness centrality in gB:")
-	# pprint([gB.nodes[node]["name"] for node in top_nodes])
-	# betweenness_centrality = nx.betweenness_centrality(gD)
-	# sorted_nodes = sorted(betweenness_centrality.items(), key=lambda x: x[1], reverse=True)
-	# top_nodes = [node for node, _ in sorted_nodes[:4]]
-	# print("Top 4 nodes with highest betweenness centrality in gD:")
-	# pprint([gD.nodes[node]["name"] for node in top_nodes])
-	# # 7)
-	# taylor_swift = df[df['artist_name'] == 'Meghan Trainor']["artist_id"].values[0]
-	# ariana_grande = df[df['artist_name'] == 'Kali Uchis']["artist_id"].values[0]
-	# path = nx.shortest_path(gB, source=taylor_swift, target=ariana_grande)
-	# print("Shortest path between Meghan Trainor and Kali Uchis in gB:")
-	# pprint([gB.nodes[node]["name"] for node in path])
+	# 4)
+	max_size_clique_B = max(cliques_B, key=len)
+	# get their graph nodes and print characteristics
+	max_size_clique_B = [gB.nodes[i] for i in max_size_clique_B]
+	print("Nodes in the largest clique in gB2:")
+	pprint(max_size_clique_B)
+	# 5)
+	communities, modularity = detect_communities(gD, 'girvan-newman')
+	print(f"Modularity of the partition found by Girvan-Newman in gD: {modularity}")
+	# 6)
+	# 	a)
+	mfvs_B = find_mfvs(gB)
+	mfvs_D = find_mfvs(gD)
+	print(f"The minimum cost for graph gB is {len(mfvs_B)} x 100 = {len(mfvs_B)*100}")
+	print(f"The minimum cost for graph gD is {len(mfvs_D)} x 100 = {len(mfvs_D)*100}")
+	# 	b)
+	betweenness_centrality = nx.betweenness_centrality(gB)
+	sorted_nodes = sorted(betweenness_centrality.items(), key=lambda x: x[1], reverse=True)
+	top_nodes = [node for node, _ in sorted_nodes[:4]]
+	print("Top 4 nodes with highest betweenness centrality in gB:")
+	pprint([gB.nodes[node]["name"] for node in top_nodes])
+	betweenness_centrality = nx.betweenness_centrality(gD)
+	sorted_nodes = sorted(betweenness_centrality.items(), key=lambda x: x[1], reverse=True)
+	top_nodes = [node for node, _ in sorted_nodes[:4]]
+	print("Top 4 nodes with highest betweenness centrality in gD:")
+	pprint([gD.nodes[node]["name"] for node in top_nodes])
+	# 7)
+	meghan = df[df['artist_name'] == 'Meghan Trainor']["artist_id"].values[0]
+	kali = df[df['artist_name'] == 'Kali Uchis']["artist_id"].values[0]
+	path = nx.shortest_path(gB, source=meghan, target=kali)
+	print("Shortest path between Meghan Trainor and Kali Uchis in gB:")
+	pprint([gB.nodes[node]["name"] for node in path])
 
 	# ------------------- END OF MAIN ------------------------ #
