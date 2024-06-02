@@ -165,7 +165,7 @@ if __name__ == "__main__":
     df = pd.read_csv("../Session_1/songs.csv")
     df = compute_mean_audio_features(df)
 
-    graph = create_similarity_graph(df, "cosine", "graph_similarity.graphml")
+    graph = create_similarity_graph(df, "euclidean", "graph_similarity.graphml")
     undirected_graph = retrieve_bidirectional_edges(graph, "gw.graphml")
     print(undirected_graph)
     
