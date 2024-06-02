@@ -9,3 +9,5 @@
 *.pdf
 *temp.ipynb
 *__pycache__
+*.gephi
+Lab/Session_4/*.png
