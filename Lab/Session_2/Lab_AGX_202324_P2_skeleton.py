@@ -166,7 +166,11 @@ if __name__ == "__main__":
     df = compute_mean_audio_features(df)
 
     graph = create_similarity_graph(df, "euclidean", "graph_similarity.graphml")
+    print(graph)
     undirected_graph = retrieve_bidirectional_edges(graph, "gw.graphml")
     print(undirected_graph)
+    pruned_graph = prune_low_weight_edges(undirected_graph, min_percentile=90)
+    num_nodes = pruned_graph.number_of_edges()
+    print(f"Number of nodes after pruning at 90th percentile: {num_nodes}")
     
     
