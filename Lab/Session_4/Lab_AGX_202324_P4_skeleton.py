@@ -154,17 +154,19 @@ def plot_similarity_heatmap(artist_audio_features_df: pd.DataFrame, similarity: 
 	# Compute the similarity matrix
 	if similarity == 'manhattan':
 		similarity_matrix = pairwise.pairwise_distances(audio_features_df, metric='manhattan')
-		similarity_matrix = 1 - similarity_matrix
 	if similarity == 'euclidean':
 		similarity_matrix = pairwise.pairwise_distances(audio_features_df, metric='euclidean')
-		similarity_matrix = 1 - similarity_matrix
+	
+	# Normalize
+	similarity_matrix = (similarity_matrix - similarity_matrix.min()) / (similarity_matrix.max() - similarity_matrix.min())
+	similarity_matrix = 1 - similarity_matrix
 
 	# Round the values in the similarity matrix to one decimal place
 	similarity_matrix = np.round(similarity_matrix, 1)
 
 	# Plot the heatmap
 	plt.figure(figsize=(10, 10))
-	sns.heatmap(similarity_matrix, annot=True, cmap='coolwarm', square=True, vmin=-20, vmax=1, xticklabels=artist_names, yticklabels=artist_names, fmt=".1f")
+	sns.heatmap(similarity_matrix, annot=True, cmap='coolwarm_r', square=True, vmin=0, vmax=1, xticklabels=artist_names, yticklabels=artist_names, fmt=".1f")
 	plt.xlabel('Artist')
 	plt.ylabel('Artist')
 	plt.title('Similarity between Artists')
@@ -184,25 +186,25 @@ def plot_similarity_heatmap(artist_audio_features_df: pd.DataFrame, similarity: 
 if __name__ == "__main__":
 	# 4
 	# a)
-	gBp = nx.read_graphml("../Session_2/gBp.graphml")
-	gBp = get_degree_distribution(gBp)
-	plot_degree_distribution(gBp)
-	gDp = nx.read_graphml("../Session_2/gDp.graphml")
-	gDp = get_degree_distribution(gDp)
-	plot_degree_distribution(gDp)
-	gw = nx.read_graphml("../Session_2/gw.graphml")
-	gw_ds = get_degree_distribution(gw)
-	plot_degree_distribution(gw_ds)
+	# gBp = nx.read_graphml("../Session_2/gBp.graphml")
+	# gBp = get_degree_distribution(gBp)
+	# plot_degree_distribution(gBp)
+	# gDp = nx.read_graphml("../Session_2/gDp.graphml")
+	# gDp = get_degree_distribution(gDp)
+	# plot_degree_distribution(gDp)
+	# gw = nx.read_graphml("../Session_2/gw.graphml")
+	# gw_ds = get_degree_distribution(gw)
+	# plot_degree_distribution(gw_ds)
 
-	# b)
+	# # b)
 	df = pd.read_csv("../Session_1/songs.csv")
 	df = compute_mean_audio_features(df)
-	taylor_swift = "06HL4z0CvFAxyc27GXpf02"
-	most_similar_artist = get_most_similar_artist(gw, taylor_swift)
-	plot_audio_features(df, artist1_id = taylor_swift, artist2_id = most_similar_artist)
-	# c)
-	least_similar_artist = get_least_similar_artist(gw, taylor_swift)
-	plot_audio_features(df, artist1_id = taylor_swift, artist2_id = least_similar_artist)
+	# taylor_swift = "06HL4z0CvFAxyc27GXpf02"
+	# most_similar_artist = get_most_similar_artist(gw, taylor_swift)
+	# plot_audio_features(df, artist1_id = taylor_swift, artist2_id = most_similar_artist)
+	# # c)
+	# least_similar_artist = get_least_similar_artist(gw, taylor_swift)
+	# plot_audio_features(df, artist1_id = taylor_swift, artist2_id = least_similar_artist)
 	
 	# d)
 	plot_similarity_heatmap(df, similarity = "euclidean")
