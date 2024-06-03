@@ -2,6 +2,9 @@ import networkx as nx
 import pandas as pd
 import spotipy
 from collections import deque
+from spotipy.oauth2 import SpotifyClientCredentials
+import json
+import numpy as np
 
 # ------- IMPLEMENT HERE ANY AUXILIARY FUNCTIONS NEEDED ------- #
 def add_node(graph: nx.DiGraph, artist_id: str, sp: spotipy.client.Spotify) -> None:
@@ -13,6 +16,25 @@ def add_node(graph: nx.DiGraph, artist_id: str, sp: spotipy.client.Spotify) -> N
 		popularity=artist['popularity'],
 		followers=artist['followers']['total']
 	)
+
+def get_degree_stats(graph):
+    in_degrees = [d for n, d in graph.in_degree()]
+    out_degrees = [d for n, d in graph.out_degree()]
+
+    stats = {
+        'in_degree': {
+            'min': np.min(in_degrees),
+            'max': np.max(in_degrees),
+            'median': np.median(in_degrees)
+        },
+        'out_degree': {
+            'min': np.min(out_degrees),
+            'max': np.max(out_degrees),
+            'median': np.median(out_degrees)
+        }
+    }
+
+    return stats
 
 # --------------- END OF AUXILIARY FUNCTIONS ------------------ #
 
@@ -149,3 +171,55 @@ def get_track_data(sp: spotipy.client.Spotify, graphs: list, out_filename: str) 
 
 	return df
 	# ----------------- END OF FUNCTION --------------------- #
+
+if __name__ == "__main__":
+	# set up the spotipy client
+	with open('credentials.json') as f:
+		credentials = json.load(f)
+
+	CLIENT_ID = credentials['CLIENT_ID']
+	CLIENT_SECRET = credentials['CLIENT_SECRET']
+
+	auth_manager = SpotifyClientCredentials(
+			client_id = CLIENT_ID,
+			client_secret = CLIENT_SECRET)
+	sp = spotipy.Spotify(auth_manager = auth_manager)
+
+	# obtain graphs and track data from seed Taylor Swift
+	artist_id = search_artist(sp, 'Taylor Swift')
+	print("Crawling BFS")
+	gB = crawler(sp, artist_id, max_nodes_to_crawl=100, strategy="BFS", out_filename="gB.graphml")
+	print("Crawling DFS")
+	gD = crawler(sp, artist_id, max_nodes_to_crawl=100, strategy="DFS", out_filename="gD.graphml")
+	print("Getting track data")
+	dataset_D = get_track_data(sp, [gB, gD], out_filename="songs.csv")
+	artist2_id = search_artist(sp, 'Pastel Ghost')
+	print("Crawling BFS")
+	hB = crawler(sp, artist2_id, max_nodes_to_crawl=100, strategy="BFS", out_filename="hB.graphml")
+
+	print(f"gB order: {gB.order()}") # 470
+	print(f"gB size: {gB.size()}") # 1980
+	print(f"gD order: {gD.order()}") # 491
+	print(f"gD size: {gD.size()}") # 1976
+
+	# get statistics
+	gB_stats = get_degree_stats(gB)
+	gD_stats = get_degree_stats(gD)
+
+	print("gB Stats:", gB_stats)
+	# >> gB Stats: {'in_degree': {'min': 1, 'max': 38, 'median': 2.0}, 'out_degree': {'min': 0, 'max': 20, 'median': 0.0}}
+	print("gD Stats:", gD_stats)
+	# >> gD Stats: {'in_degree': {'min': 1, 'max': 32, 'median': 2.0}, 'out_degree': {'min': 0, 'max': 20, 'median': 0.0}}
+
+	print("The number of different songs in the dataset is ", len(dataset_D["track_id"].unique())) # 6031
+	print("The number of different artists in the dataset is ", len(dataset_D["artist_id"].unique())) # 656
+	print("The number of different albums in the dataset is ", len(dataset_D["album_name"].unique())) # 3535
+
+	# Analyze if the number of albums is correct
+	print("\nThe following analysis is for ensurement purposes\n")
+		# group by album_name and check for multiple unique artist_names
+	album_groups = dataset_D.groupby('album_name')['artist_name'].nunique()
+	multiple_artists = album_groups[album_groups > 1]
+		# display albums with multiple artists
+	print("Albums with different artist names:")
+	# print(multiple_artists)
