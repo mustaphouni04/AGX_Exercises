@@ -179,11 +179,11 @@ def detect_communities(g: nx.Graph, method: str, random_seed: int=42) -> tuple:
 
 if __name__ == '__main__':
 	# ------- IMPLEMENT HERE THE MAIN FOR THIS SESSION ------- #
-	gB = nx.read_graphml('gB.graphml')
-	gD = nx.read_graphml('gD.graphml')
-	gB2 = nx.read_graphml('gBp.graphml')
-	gD2 = nx.read_graphml('gDp.graphml')
-	df = pd.read_csv('songs.csv')
+	gB = nx.read_graphml('../Session_1/gB.graphml')
+	gD = nx.read_graphml('../Session_1/gD.graphml')
+	gB2 = nx.read_graphml('../Session_2/gBp.graphml')
+	gD2 = nx.read_graphml('../Session_2/gDp.graphml')
+	df = pd.read_csv('../Session_1/songs.csv')
 	# 1)
 	# 	a)
 	shared_nodes_BD = num_common_nodes(gB, gD)
