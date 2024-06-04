@@ -167,7 +167,7 @@ if __name__ == "__main__":
 	# b)
 	df = pd.read_csv("../Session_1/songs.csv")
 	df = compute_mean_audio_features(df)
-	gW = create_similarity_graph(df, "euclidean", "graph_similarity.graphml")
+	gW = create_similarity_graph(df, "euclidean", "gw.graphml")
 	print(gW)
 	
 	pruned_graph = prune_low_weight_edges(gW, min_percentile=90)
@@ -201,12 +201,16 @@ if __name__ == "__main__":
 	# get the edge weights as a dictionary
 	edge_weights = nx.get_edge_attributes(gW, 'weight')
 	# find the two most similar artists
-	most_similar_artists = sorted(edge_weights.items(), key=lambda x: x[1], reverse=True)[:2]
+	most_similar_artists = sorted(edge_weights.items(), key=lambda x: x[1], reverse=True)[:1]
 	print("Most similar artists:")
 	for edge, weight in most_similar_artists:
-		print(f"Artist {edge[0]} and Artist {edge[1]} with similarity {weight}")
+		artist_name1 = gW.nodes[edge[0]]['name']
+		artist_name2 = gW.nodes[edge[1]]['name']
+		print(f"Artist {artist_name1} and Artist {artist_name2} with similarity {weight}")
 	# find the two least similar artists
-	least_similar_artists = sorted(edge_weights.items(), key=lambda x: x[1])[:2]
+	least_similar_artists = sorted(edge_weights.items(), key=lambda x: x[1])[:1]
 	print("Least similar artists:")
 	for edge, weight in least_similar_artists:
-		print(f"Artist {edge[0]} and Artist {edge[1]} with similarity {weight}")
+		artist_name1 = gW.nodes[edge[0]]['name']
+		artist_name2 = gW.nodes[edge[1]]['name']
+		print(f"Artist {artist_name1} and Artist {artist_name2} with similarity {weight}")
