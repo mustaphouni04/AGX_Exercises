@@ -5,7 +5,7 @@ import os
 import networkx as nx
 import numpy as np
 import seaborn as sns
-from sklearn.metrics import pairwise
+from sklearn.metrics.pairwise import cosine_similarity, euclidean_distances, manhattan_distances
 
 # Add the parent directories to the sys.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
@@ -145,7 +145,7 @@ def plot_similarity_heatmap(artist_audio_features_df: pd.DataFrame, similarity: 
 	:param out_filename: name of the file to save the plot. If None, the plot is not saved.
 	"""
 	# Select only the audio features columns (excluding artist_id and artist_name)
-	audio_features_df = artist_audio_features_df.iloc[:, 1:-1]
+	audio_features_df = artist_audio_features_df.drop(['artist_id', 'artist_name'], axis=1).iloc[:, 1:-1]
 
 	# Select only the first 15 artists
 	audio_features_df = audio_features_df.head(15)
@@ -153,20 +153,22 @@ def plot_similarity_heatmap(artist_audio_features_df: pd.DataFrame, similarity: 
 
 	# Compute the similarity matrix
 	if similarity == 'manhattan':
-		similarity_matrix = pairwise.pairwise_distances(audio_features_df, metric='manhattan')
-	if similarity == 'euclidean':
-		similarity_matrix = pairwise.pairwise_distances(audio_features_df, metric='euclidean')
-	
-	# Normalize
-	similarity_matrix = (similarity_matrix - similarity_matrix.min()) / (similarity_matrix.max() - similarity_matrix.min())
-	similarity_matrix = 1 - similarity_matrix
-
-	# Round the values in the similarity matrix to one decimal place
-	similarity_matrix = np.round(similarity_matrix, 1)
+		distances = manhattan_distances(audio_features_df)
+		similarity_matrix = 1 / (1 + distances) # normalize
+		vmin, vmax = 0, 1
+	elif similarity == 'euclidean':
+		distances = euclidean_distances(audio_features_df)
+		similarity_matrix = 1 / (1 + distances) # normalize
+		vmin, vmax = 0, 1
+	elif similarity == 'cosine':
+		similarity_matrix = cosine_similarity(audio_features_df)
+		vmin, vmax = similarity_matrix.min(), similarity_matrix.max()
+	else:
+		raise ValueError("Invalid similarity metric")
 
 	# Plot the heatmap
 	plt.figure(figsize=(10, 10))
-	sns.heatmap(similarity_matrix, annot=True, cmap='coolwarm_r', square=True, vmin=0, vmax=1, xticklabels=artist_names, yticklabels=artist_names, fmt=".1f")
+	sns.heatmap(similarity_matrix, annot=True, cmap='coolwarm_r', square=True, xticklabels=artist_names, yticklabels=artist_names, fmt=".2f", vmin=vmin, vmax=vmax)
 	plt.xlabel('Artist')
 	plt.ylabel('Artist')
 	plt.title('Similarity between Artists')
