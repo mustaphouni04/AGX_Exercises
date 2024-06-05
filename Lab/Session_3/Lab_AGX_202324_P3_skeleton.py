@@ -236,10 +236,10 @@ if __name__ == '__main__':
 	print("Top 4 nodes with highest betweenness centrality in gD:")
 	pprint([gD.nodes[node]["name"] for node in top_nodes])
 	# 7)
-	meghan = df[df['artist_name'] == 'Meghan Trainor']["artist_id"].values[0]
-	kali = df[df['artist_name'] == 'Kali Uchis']["artist_id"].values[0]
+	meghan = df[df['artist_name'] == 'Taylor Swift']["artist_id"].values[0]
+	kali = df[df['artist_name'] == 'THE DRIVER ERA']["artist_id"].values[0]
 	path = nx.shortest_path(gB, source=meghan, target=kali)
-	print("Shortest path between Meghan Trainor and Kali Uchis in gB:")
+	print("Shortest path between Taylor Swift and THE DRIVER ERA in gB:")
 	pprint([gB.nodes[node]["name"] for node in path])
 
 	# ------------------- END OF MAIN ------------------------ #
